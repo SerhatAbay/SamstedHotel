@@ -19,7 +19,7 @@ namespace SamstedHotel
         public MainWindow()
         {
             InitializeComponent();
-            int per = 2;
+            
         }
     }
 }
