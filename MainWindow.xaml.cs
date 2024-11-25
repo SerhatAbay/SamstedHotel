@@ -20,6 +20,7 @@ namespace SamstedHotel
         {
             InitializeComponent();
             int per = 2;
+            int a = 3;
         }
     }
 }
