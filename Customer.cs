@@ -19,6 +19,17 @@ namespace SamstedHotel
         public string CustomerZip { get; set; }
         public string CustomerCountry { get; set; }
 
-
+        public Customer(int customerID, string customerFirstName, string customerLastName, string customerEmail, string customerPhone, string customerAddress, string customerCity, string customerZip, string customerCountry)
+        {
+            CustomerID = customerID;
+            CustomerFirstName = customerFirstName;
+            CustomerLastName = customerLastName;
+            CustomerEmail = customerEmail;
+            CustomerPhone = customerPhone;
+            CustomerAddress = customerAddress;
+            CustomerCity = customerCity;
+            CustomerZip = customerZip;
+            CustomerCountry = customerCountry;
+        }
     }
 }

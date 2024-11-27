@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace SamstedHotel
 {
-    internal class CourseRoom
+    public class CourseRoom
     {
+
     }
 }

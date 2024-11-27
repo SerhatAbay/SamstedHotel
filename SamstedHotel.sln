@@ -3,7 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35201.131
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamstedHotel", "SamstedHotel.csproj", "{49D304AF-9323-4EAF-A5C5-74010F698F85}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SamstedHotel", "SamstedHotel.csproj", "{49D304AF-9323-4EAF-A5C5-74010F698F85}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repo", "Repo", "{5891E697-FEAB-43C7-9D8B-BD697A6356AC}"
+	ProjectSection(SolutionItems) = preProject
+		CustomerRepo.cs = CustomerRepo.cs
+		IRepo.cs = IRepo.cs
+		ReservationRepo.cs = ReservationRepo.cs
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

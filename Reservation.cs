@@ -12,7 +12,7 @@ namespace SamstedHotel
         private DateTime _endDate;
 
         public int ReservationID { get; set; }
-        public int UserID { get; }
+      public int CustomerID { get; set; }
 
         public DateTime Created {  get; set; } = DateTime.Now;
         public DateTime Updated { get; set; } = DateTime.Now;
@@ -39,7 +39,7 @@ namespace SamstedHotel
             }
         }
 
-        public string BookingType { get; set; }
+        public string ReservationType { get; set; }
 
         public decimal TotalAmount { get; set; }
 
