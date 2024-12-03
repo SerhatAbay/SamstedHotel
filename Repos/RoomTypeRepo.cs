@@ -1,0 +1,121 @@
+﻿using Microsoft.Data.SqlClient;
+using SamstedHotel.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace SamstedHotel.Repos
+{
+    public class RoomTypeRepo : IRepository<RoomType>
+    {
+        private readonly string _connectionString;
+
+        public RoomTypeRepo(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
+        public IEnumerable<RoomType> GetAll()
+        {
+            var roomTypes = new List<RoomType>();
+            string query = "SELECT * FROM RoomType";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        roomTypes.Add(new RoomType
+                        {
+                            RoomTypeID = (int)reader["TypeID"],
+                            Name = reader["Name"].ToString(),
+                            PricePerNight = (decimal)reader["PricePerNight"],
+                            Capacity = (int)reader["Capacity"]
+                        });
+                    }
+                }
+            }
+
+            return roomTypes;
+        }
+
+        public RoomType GetById(int id)
+        {
+            RoomType roomType = null;
+            string query = "SELECT * FROM RoomType WHERE TypeID = @TypeID";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@TypeID", id);
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        roomType = new RoomType
+                        {
+                            RoomTypeID = (int)reader["TypeID"],
+                            Name = reader["Name"].ToString(),
+                            PricePerNight = (decimal)reader["PricePerNight"],
+                            Capacity = (int)reader["Capacity"]
+                        };
+                    }
+                }
+            }
+
+            return roomType;
+        }
+
+        public void Add(RoomType entity)
+        {
+            string query = "INSERT INTO RoomType (Name, PricePerNight, Capacity) VALUES (@Name, @PricePerNight, @Capacity)";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Name", entity.Name);
+                command.Parameters.AddWithValue("@PricePerNight", entity.PricePerNight);
+                command.Parameters.AddWithValue("@Capacity", entity.Capacity);
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+        }
+
+        public void Update(RoomType entity)
+        {
+            string query = "UPDATE RoomType SET Name = @Name, PricePerNight = @PricePerNight, Capacity = @Capacity WHERE TypeID = @TypeID";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@TypeID", entity.RoomTypeID);
+                command.Parameters.AddWithValue("@Name", entity.Name);
+                command.Parameters.AddWithValue("@PricePerNight", entity.PricePerNight);
+                command.Parameters.AddWithValue("@Capacity", entity.Capacity);
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+        }
+
+        public void Delete(RoomType entity)
+        {
+            string query = "DELETE FROM RoomType WHERE TypeID = @TypeID";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@TypeID", entity.RoomTypeID);
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+}

@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SamstedHotel
+namespace SamstedHotel.Model
 {
     public class ReservationRoom
     {
-        Room room;
-        Reservation reservation;
-
-        public int ReservationID { get; set; }
         public int RoomID { get; set; }
-    }
-    }
+        public int ReservationID { get; set; }
 
+        public Room? Room { get; set; }
+        public Reservation? Reservation { get; set; }
+    }
+}

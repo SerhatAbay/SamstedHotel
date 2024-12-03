@@ -4,16 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SamstedHotel
+namespace SamstedHotel.Repos
 {
     public interface IRepository<T> where T : class
     {
         IEnumerable<T> GetAll();
         T GetById(int id);
-
-        void Add(T entity);
+        void Add(T entity); 
         void Update(T entity);
-        void Delete(int id);
+        void Delete(T entity); 
     }
 }
-
