@@ -33,6 +33,7 @@ namespace SamstedHotel.Repos
                     {
                         courseRooms.Add(new CourseRoom
                         {
+                            CourseRoomID = (int)reader["CourseRoomID"],
                             CourseRoomName = reader["CourseRoomName"].ToString(),
                             EventPackage = reader["EventPackage"].ToString(),
                             TotalPrice = (decimal)reader["TotalPrice"]
