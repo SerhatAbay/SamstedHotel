@@ -33,7 +33,7 @@ namespace SamstedHotel.Repos
                     {
                         roomTypes.Add(new RoomType
                         {
-                            RoomTypeID = (int)reader["TypeID"],
+                            RoomTypeID = (int)reader["RoomTypeID"],
                             Name = reader["Name"].ToString(),
                             PricePerNight = (decimal)reader["PricePerNight"],
                             Capacity = (int)reader["Capacity"]
@@ -48,12 +48,12 @@ namespace SamstedHotel.Repos
         public RoomType GetById(int id)
         {
             RoomType roomType = null;
-            string query = "SELECT * FROM RoomType WHERE TypeID = @TypeID";
+            string query = "SELECT * FROM RoomType WHERE RoomTypeID = @RoomTypeID";
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@TypeID", id);
+                command.Parameters.AddWithValue("@RoomTypeID", id);
                 connection.Open();
 
                 using (SqlDataReader reader = command.ExecuteReader())
@@ -62,7 +62,7 @@ namespace SamstedHotel.Repos
                     {
                         roomType = new RoomType
                         {
-                            RoomTypeID = (int)reader["TypeID"],
+                            RoomTypeID = (int)reader["RoomTypeID"],
                             Name = reader["Name"].ToString(),
                             PricePerNight = (decimal)reader["PricePerNight"],
                             Capacity = (int)reader["Capacity"]
@@ -91,12 +91,12 @@ namespace SamstedHotel.Repos
 
         public void Update(RoomType entity)
         {
-            string query = "UPDATE RoomType SET Name = @Name, PricePerNight = @PricePerNight, Capacity = @Capacity WHERE TypeID = @TypeID";
+            string query = "UPDATE RoomType SET Name = @Name, PricePerNight = @PricePerNight, Capacity = @Capacity WHERE RoomTypeID = @RoomTypeID";
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@TypeID", entity.RoomTypeID);
+                command.Parameters.AddWithValue("@RoomTypeID", entity.RoomTypeID);
                 command.Parameters.AddWithValue("@Name", entity.Name);
                 command.Parameters.AddWithValue("@PricePerNight", entity.PricePerNight);
                 command.Parameters.AddWithValue("@Capacity", entity.Capacity);
@@ -107,12 +107,12 @@ namespace SamstedHotel.Repos
 
         public void Delete(RoomType entity)
         {
-            string query = "DELETE FROM RoomType WHERE TypeID = @TypeID";
+            string query = "DELETE FROM RoomType WHERE RoomTypeID = @RoomTypeID";
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@TypeID", entity.RoomTypeID);
+                command.Parameters.AddWithValue("@RoomTypeID", entity.RoomTypeID);
                 connection.Open();
                 command.ExecuteNonQuery();
             }
