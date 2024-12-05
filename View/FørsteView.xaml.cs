@@ -19,9 +19,6 @@ namespace SamstedHotel.View
     /// </summary>
     public partial class FørsteView : Window
     {
-        public FørsteView()
-        {
-            InitializeComponent();
-        }
+        
     }
 }
