@@ -13,5 +13,6 @@ namespace SamstedHotel.Model
 
         public Room? Room { get; set; }
         public Reservation? Reservation { get; set; }
+
     }
 }

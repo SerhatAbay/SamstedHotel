@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace SamstedHotel.View
 {
     /// <summary>
-    /// Interaction logic for FørsteView.xaml
+    /// Interaction logic for ViewDeleteReservationWindow.xaml
     /// </summary>
-    public partial class FørsteView : Window
+    public partial class ViewDeleteReservationWindow : Window
     {
-        public FørsteView()
+        public ViewDeleteReservationWindow()
         {
             InitializeComponent();
         }

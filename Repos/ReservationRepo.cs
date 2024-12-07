@@ -10,7 +10,36 @@ namespace SamstedHotel.Repos
 {
     public class ReservationRepo
     {
-        
+        public List<Reservation> GetReservationsByDate(DateTime startDate, DateTime endDate)
+        {
+            var reservations = new List<Reservation>();
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand("SELECT * FROM Reservations WHERE StartDate >= @StartDate AND EndDate <= @EndDate", connection);
+                command.Parameters.AddWithValue("@StartDate", startDate);
+                command.Parameters.AddWithValue("@EndDate", endDate);
+
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    reservations.Add(new Reservation
+                    {
+                        ReservationID = (int)reader["ReservationID"],
+                        CustomerID = (int)reader["CustomerID"],
+                        StartDate = (DateTime)reader["StartDate"],
+                        EndDate = (DateTime)reader["EndDate"],
+                        TotalAmount = (decimal)reader["TotalAmount"],
+                        Status = (string)reader["Status"]
+                    });
+                }
+            }
+
+            return reservations;
+        }
+
+
         private string _connectionString;
 
         public ReservationRepo(string connectionString)

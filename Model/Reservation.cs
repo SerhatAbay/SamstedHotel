@@ -20,5 +20,7 @@ namespace SamstedHotel.Model
 
         // Optional: Navigation property for Customer
         public Customer? Customer { get; set; }
+
+        public Room Room { get; set; }
     }
 }

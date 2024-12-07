@@ -12,6 +12,7 @@ namespace SamstedHotel.Model
         public string RoomName { get; set; } = string.Empty;
         public int RoomTypeID { get; set; }
         public string Status { get; set; } = "Available";
+        public decimal PricePerNight { get; set; } // Prisen pr. nat
 
         // Optional: Navigation property for RoomType
         public RoomType? RoomType { get; set; }
