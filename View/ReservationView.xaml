@@ -1,0 +1,58 @@
+﻿<Window x:Class="SamstedHotel.View.ReservationView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Opret Reservation" Height="600" Width="700">
+    <Grid>
+        <!-- TabControl for viewing rooms and course rooms -->
+        <TabControl>
+            <TabItem Header="Værelser">
+                <StackPanel>
+                    <TextBlock Text="Vælg de værelser, du ønsker at reservere:" Margin="10"/>
+                    <ItemsControl ItemsSource="{Binding AvailableRooms}" Margin="10">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding RoomName}" IsChecked="{Binding IsSelected}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </TabItem>
+
+            <TabItem Header="Kursuslokaler">
+                <StackPanel>
+                    <TextBlock Text="Vælg de kursuslokaler, du ønsker at reservere:" Margin="10"/>
+                    <ItemsControl ItemsSource="{Binding AvailableCourseRooms}" Margin="10">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding CourseRoomName}" IsChecked="{Binding IsSelected}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- Reservation DataGrid -->
+        <DataGrid ItemsSource="{Binding Reservations}" AutoGenerateColumns="True" Margin="10" Height="200"/>
+
+        <!-- Reservation Information -->
+        <StackPanel VerticalAlignment="Bottom" Margin="10">
+            <TextBlock Text="Start dato:" />
+            <DatePicker SelectedDate="{Binding StartDate}" Margin="10" />
+
+            <TextBlock Text="Slut dato:" />
+            <DatePicker SelectedDate="{Binding EndDate}" Margin="10" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button Content="Book Reservation"
+                        Command="{Binding BookReservationCommand}" Margin="10" />
+                <Button Content="Annuller Reservation"
+                        Command="{Binding CancelReservationCommand}" Margin="10" />
+                <Button Content="Rediger Reservation"
+                        Command="{Binding EditReservationCommand}" Margin="10" />
+                <Button Content="Gem Reservationer"
+                        Command="{Binding SaveToCsvCommand}" Margin="10" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -119,5 +119,38 @@ namespace SamstedHotel.Repos
                 command.ExecuteNonQuery();
             }
         }
+
+        public bool IsCourseRoomAvailable(int courseRoomID, DateTime startDate, DateTime endDate)
+        {
+            List<Reservation> reservations = new List<Reservation>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand("SELECT * FROM Reservations WHERE CourseRoomID = @CourseRoomID", connection);
+                command.Parameters.AddWithValue("@CourseRoomID", courseRoomID);
+
+                SqlDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    var reservation = new Reservation
+                    {
+                        ReservationID = (int)reader["ReservationID"],
+                        StartDate = (DateTime)reader["StartDate"],
+                        EndDate = (DateTime)reader["EndDate"],
+                        Status = (string)reader["Status"]
+                    };
+
+                    // Tjek for overlappende reservationer
+                    if (startDate < reservation.EndDate && endDate > reservation.StartDate)
+                    {
+                        return false; // Kursuslokalet er allerede reserveret
+                    }
+                }
+            }
+
+            return true; // Kursuslokalet er tilgængeligt
+        }
     }
 }

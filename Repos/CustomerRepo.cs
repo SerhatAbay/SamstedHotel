@@ -128,5 +128,40 @@ namespace SamstedHotel.Repos
                 command.ExecuteNonQuery();
             }
         }
+
+        // Henter en kunde baseret på email
+        public Customer GetByEmail(string email)
+        {
+            Customer customer = null;
+            string query = "SELECT * FROM Customers WHERE Email = @Email";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Email", email);
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        customer = new Customer
+                        {
+                            CustomerID = (int)reader["CustomerID"],
+                            FirstName = reader["FirstName"].ToString(),
+                            LastName = reader["LastName"].ToString(),
+                            Email = reader["Email"].ToString(),
+                            TLF = reader["TLF"].ToString()
+                        };
+                    }
+                }
+            }
+
+            return customer;
+        }
+
+
+
+
     }
 }

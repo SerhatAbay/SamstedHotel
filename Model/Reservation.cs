@@ -18,7 +18,6 @@ namespace SamstedHotel.Model
         public decimal TotalAmount { get; set; }
         public string Status { get; set; } = "Booked";
 
-        // Optional: Navigation property for Customer
-        public Customer? Customer { get; set; }
+       
     }
 }
