@@ -122,35 +122,37 @@ namespace SamstedHotel.Repos
 
         public bool IsCourseRoomAvailable(int courseRoomID, DateTime startDate, DateTime endDate)
         {
-            List<Reservation> reservations = new List<Reservation>();
-
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("SELECT * FROM Reservations WHERE CourseRoomID = @CourseRoomID", connection);
+
+                // Find alle reservationer for det valgte kursuslokale
+                var command = new SqlCommand(@"
+            SELECT r.StartDate, r.EndDate, r.Status
+            FROM Reservations r
+            INNER JOIN ReservationCourseRoom rcr ON rcr.ReservationID = r.ReservationID
+            WHERE rcr.CourseRoomID = @CourseRoomID AND r.Status != 'Cancelled'", connection);
+
                 command.Parameters.AddWithValue("@CourseRoomID", courseRoomID);
 
-                SqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
+                using (var reader = command.ExecuteReader())
                 {
-                    var reservation = new Reservation
+                    while (reader.Read())
                     {
-                        ReservationID = (int)reader["ReservationID"],
-                        StartDate = (DateTime)reader["StartDate"],
-                        EndDate = (DateTime)reader["EndDate"],
-                        Status = (string)reader["Status"]
-                    };
+                        var reservationStartDate = (DateTime)reader["StartDate"];
+                        var reservationEndDate = (DateTime)reader["EndDate"];
+                        var status = (string)reader["Status"];
 
-                    // Tjek for overlappende reservationer
-                    if (startDate < reservation.EndDate && endDate > reservation.StartDate)
-                    {
-                        return false; // Kursuslokalet er allerede reserveret
+                        // Tjek for overlap med eksisterende reservation og om status er "Booked"
+                        if (status == "Booked" && startDate < reservationEndDate && endDate > reservationStartDate)
+                        {
+                            return false; // Kursuslokalet er allerede booket i den valgte periode
+                        }
                     }
                 }
             }
 
-            return true; // Kursuslokalet er tilgængeligt
+            return true; // Kursuslokalet er ledigt
         }
     }
 }

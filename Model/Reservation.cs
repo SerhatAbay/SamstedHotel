@@ -11,13 +11,11 @@ namespace SamstedHotel.Model
         public int ReservationID { get; set; }
         public int CustomerID { get; set; }
         public DateTime Created {  get; set; } = DateTime.Now;
-        public DateTime Updated { get; set; } = new DateTime();
+        public DateTime? Updated { get; set; } = null;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string BookingType { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
-        public string Status { get; set; } = "Booked";
-
-       
+        public string Status { get; set; } = "Booked";    
     }
 }

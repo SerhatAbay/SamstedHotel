@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using SamstedHotel.Model;
-using Microsoft.Extensions.Configuration;
 
 namespace SamstedHotel.Repos
 {
@@ -16,19 +12,27 @@ namespace SamstedHotel.Repos
 
         public ReservationRepo(string connectionString)
         {
-            _connectionString = App.ConnectionString;
+            _connectionString = connectionString;
         }
 
         // Opret en reservation
         public void AddReservation(Reservation reservation)
         {
+            // Hvis du ikke allerede har sat Updated, skal den opdateres til nuværende tidspunkt
+            reservation.Updated = DateTime.Now;
+
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("INSERT INTO Reservations (CustomerID, StartDate, EndDate, TotalAmount, Status) VALUES (@CustomerID, @StartDate, @EndDate, @TotalAmount, @Status)", connection);
+                var command = new SqlCommand("INSERT INTO Reservations (CustomerID, Created, Updated, StartDate, EndDate, BookingType, TotalAmount, Status) VALUES (@CustomerID, @Created, @Updated, @StartDate, @EndDate, @BookingType, @TotalAmount, @Status)", connection);
+
+                // Tilføj parametre til SQL-kommandoen
                 command.Parameters.AddWithValue("@CustomerID", reservation.CustomerID);
+                command.Parameters.AddWithValue("@Created", reservation.Created);
+                command.Parameters.AddWithValue("@Updated", reservation.Updated); // Sørger for at Updated bliver sat til nuværende dato
                 command.Parameters.AddWithValue("@StartDate", reservation.StartDate);
                 command.Parameters.AddWithValue("@EndDate", reservation.EndDate);
+                command.Parameters.AddWithValue("@BookingType", reservation.BookingType);
                 command.Parameters.AddWithValue("@TotalAmount", reservation.TotalAmount);
                 command.Parameters.AddWithValue("@Status", reservation.Status);
 
@@ -36,48 +40,86 @@ namespace SamstedHotel.Repos
             }
         }
 
-        // Hent reservationer
+        // Hent alle reservationer
         public List<Reservation> GetAllReservations()
         {
             List<Reservation> reservations = new List<Reservation>();
 
-            // Updated connection string for Windows Authentication and SSL bypass (if necessary)
-            string connectionString = "Server=LAPTOP-A1FHFJEU\\VE_SERVER;Database=Samsted;Integrated Security=True;TrustServerCertificate=True;";
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                try
+                connection.Open();
+                var command = new SqlCommand("SELECT * FROM Reservations", connection);
+                using (var reader = command.ExecuteReader())
                 {
-                    connection.Open(); // Try opening the connection
-                    var command = new SqlCommand("SELECT * FROM Reservations", connection);
-                    SqlDataReader reader = command.ExecuteReader();
-
                     while (reader.Read())
                     {
                         reservations.Add(new Reservation
                         {
                             ReservationID = (int)reader["ReservationID"],
                             CustomerID = (int)reader["CustomerID"],
+                            Created = (DateTime)reader["Created"],
+                            Updated = (DateTime)reader["Updated"],
                             StartDate = (DateTime)reader["StartDate"],
                             EndDate = (DateTime)reader["EndDate"],
+                            BookingType = (string)reader["BookingType"],
                             TotalAmount = (decimal)reader["TotalAmount"],
                             Status = (string)reader["Status"]
                         });
                     }
                 }
-                catch (SqlException ex)
-                {
-                    // Handle the error, possibly log it for troubleshooting
-                    Console.WriteLine($"SQL Error: {ex.Message}");
-                }
-                catch (Exception ex)
-                {
-                    // Handle general errors
-                    Console.WriteLine($"Error: {ex.Message}");
-                }
             }
 
             return reservations;
+        }
+
+        // Hent alle kursusrum
+        public List<CourseRoom> GetAllCourseRooms()
+        {
+            var courseRooms = new List<CourseRoom>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand("SELECT CourseRoomID, CourseRoomName FROM CourseRooms", connection);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        courseRooms.Add(new CourseRoom
+                        {
+                            CourseRoomID = (int)reader["CourseRoomID"],
+                            CourseRoomName = (string)reader["CourseRoomName"]
+                        });
+                    }
+                }
+            }
+
+            return courseRooms;
+        }
+
+        // Hent alle værelser
+        public List<Room> GetAllRooms()
+        {
+            var rooms = new List<Room>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand("SELECT RoomID, RoomName FROM Rooms", connection);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        rooms.Add(new Room
+                        {
+                            RoomID = (int)reader["RoomID"],
+                            RoomName = (string)reader["RoomName"]
+                        });
+                    }
+                }
+            }
+
+            return rooms;
         }
 
         // Opdater en reservation
@@ -86,11 +128,12 @@ namespace SamstedHotel.Repos
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("UPDATE Reservations SET StartDate = @StartDate, EndDate = @EndDate, TotalAmount = @TotalAmount, Status = @Status WHERE ReservationID = @ReservationID", connection);
+                var command = new SqlCommand("UPDATE Reservations SET StartDate = @StartDate, EndDate = @EndDate, TotalAmount = @TotalAmount, Status = @Status, Updated = @Updated WHERE ReservationID = @ReservationID", connection);
                 command.Parameters.AddWithValue("@StartDate", reservation.StartDate);
                 command.Parameters.AddWithValue("@EndDate", reservation.EndDate);
                 command.Parameters.AddWithValue("@TotalAmount", reservation.TotalAmount);
                 command.Parameters.AddWithValue("@Status", reservation.Status);
+                command.Parameters.AddWithValue("@Updated", DateTime.Now);
                 command.Parameters.AddWithValue("@ReservationID", reservation.ReservationID);
 
                 command.ExecuteNonQuery();
@@ -121,57 +164,31 @@ namespace SamstedHotel.Repos
                 var command = new SqlCommand("SELECT * FROM Reservations WHERE ReservationID = @ReservationID", connection);
                 command.Parameters.AddWithValue("@ReservationID", reservationID);
 
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
+                using (var reader = command.ExecuteReader())
                 {
-                    reservation = new Reservation
+                    if (reader.Read())
                     {
-                        ReservationID = (int)reader["ReservationID"],
-                        CustomerID = (int)reader["CustomerID"],
-                        StartDate = (DateTime)reader["StartDate"],
-                        EndDate = (DateTime)reader["EndDate"],
-                        TotalAmount = (decimal)reader["TotalAmount"],
-                        Status = (string)reader["Status"]
-                    };
+                        reservation = new Reservation
+                        {
+                            ReservationID = (int)reader["ReservationID"],
+                            CustomerID = (int)reader["CustomerID"],
+                            Created = (DateTime)reader["Created"],
+                            Updated = (DateTime)reader["Updated"],
+                            StartDate = (DateTime)reader["StartDate"],
+                            EndDate = (DateTime)reader["EndDate"],
+                            BookingType = (string)reader["BookingType"],
+                            TotalAmount = (decimal)reader["TotalAmount"],
+                            Status = (string)reader["Status"]
+                        };
+                    }
                 }
             }
 
             return reservation;
         }
 
-        // Valider om et værelse allerede er booket i den ønskede periode
-        public bool IsRoomAvailable(int roomID, DateTime startDate, DateTime endDate)
-        {
-            List<Reservation> reservations = new List<Reservation>();
 
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                var command = new SqlCommand("SELECT * FROM Reservations WHERE RoomID = @RoomID", connection);
-                command.Parameters.AddWithValue("@RoomID", roomID); 
 
-                SqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    var reservation = new Reservation
-                    {
-                        ReservationID = (int)reader["ReservationID"],
-                        StartDate = (DateTime)reader["StartDate"],
-                        EndDate = (DateTime)reader["EndDate"],
-                        Status = (string)reader["Status"]
-                    };
-
-                    // Tjek for overlappende reservationer
-                    if (startDate < reservation.EndDate && endDate > reservation.StartDate)
-                    {
-                        return false; // Værelset er allerede reserveret
-                    }
-                }
-            }
-
-            return true; // Værelset er tilgængeligt
-        }
+        
     }
 }

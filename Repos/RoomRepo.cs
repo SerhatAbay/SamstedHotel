@@ -124,5 +124,41 @@ namespace SamstedHotel.Repos
                 command.ExecuteNonQuery();
             }
         }
+
+        // Tjek om et værelse er ledigt i den ønskede periode
+        public bool IsRoomAvailable(int roomID, DateTime startDate, DateTime endDate)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Find alle reservationer for det valgte værelse
+                var command = new SqlCommand(@"
+            SELECT r.StartDate, r.EndDate, r.Status
+            FROM Reservations r
+            INNER JOIN ReservationRoom rr ON rr.ReservationID = r.ReservationID
+            WHERE rr.RoomID = @RoomID AND r.Status != 'Cancelled'", connection);
+
+                command.Parameters.AddWithValue("@RoomID", roomID);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var reservationStartDate = (DateTime)reader["StartDate"];
+                        var reservationEndDate = (DateTime)reader["EndDate"];
+                        var status = (string)reader["Status"];
+
+                        // Tjek for overlap med eksisterende reservation og om status er "Booked"
+                        if (status == "Booked" && startDate < reservationEndDate && endDate > reservationStartDate)
+                        {
+                            return false; // Værelset er allerede booket i den valgte periode
+                        }
+                    }
+                }
+            }
+
+            return true; // Værelset er ledigt
+        }
     }
 }
