@@ -65,13 +65,32 @@
 
             <!-- Tab for Reservation Management -->
             <TabItem Header="Reservation Management">
-                <StackPanel>
-                    <TextBlock Text="Booking Status:" Margin="10" />
+                <Grid Margin="10">
+                    <!-- Define Rows for DataGrid and Buttons -->
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <!-- DataGrid takes most space -->
+                        <RowDefinition Height="Auto" />
+                        <!-- Buttons -->
+                    </Grid.RowDefinitions>
+
+                    <!-- DataGrid to Show Reservations -->
                     <DataGrid ItemsSource="{Binding Reservations}" 
                               AutoGenerateColumns="True" 
                               CanUserAddRows="False" 
-                              CanUserDeleteRows="False" />
-                </StackPanel>
+                              CanUserDeleteRows="False" 
+                              SelectedItem="{Binding SelectedReservation}" 
+                              Grid.Row="0" />
+
+                    <!-- Buttons at the Bottom -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1" Margin="10">
+                        <!-- Delete Reservation Button -->
+                        <Button Content="Slet reservation" Command="{Binding DeleteReservationCommand}" Width="150" Margin="5" />
+
+                        <!-- Save Reservations Button -->
+                        <Button Content="Gem reservationer" Command="{Binding SaveToCsvCommand}" Width="150" Margin="5" />
+                    </StackPanel>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

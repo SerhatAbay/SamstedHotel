@@ -30,6 +30,13 @@ namespace SamstedHotel.ViewModel
             }
         }
 
+        private Reservation _selectedReservation;
+        public Reservation SelectedReservation
+        {
+            get => _selectedReservation;
+            set { _selectedReservation = value; OnPropertyChanged(); }
+        }
+
         // Ny property til at holde valgt kunde
         private Customer _selectedCustomer;
         public Customer SelectedCustomer
@@ -88,7 +95,7 @@ namespace SamstedHotel.ViewModel
             // Initialize commands
             AddCustomerCommand = new RelayCommand(AddCustomer);
             BookReservationCommand = new RelayCommand(BookReservation);
-            CancelReservationCommand = new RelayCommand(CancelReservation);
+            DeleteReservationCommand = new RelayCommand(DeleteReservation);
             SaveToCsvCommand = new RelayCommand(SaveReservationsToCsv);
         }
 
@@ -107,7 +114,7 @@ namespace SamstedHotel.ViewModel
 
         // Commands for different reservation actions
         public ICommand BookReservationCommand { get; }
-        public ICommand CancelReservationCommand { get; }
+        public ICommand DeleteReservationCommand { get; }
         public ICommand SaveToCsvCommand { get; }
         public ICommand AddCustomerCommand { get; }
 
@@ -245,21 +252,17 @@ namespace SamstedHotel.ViewModel
 
 
         // Method to handle canceling a reservation
-        private void CancelReservation()
+        private void DeleteReservation()
         {
-            try
+            if (SelectedReservation == null)
             {
-                var selectedReservation = Reservations.FirstOrDefault(r => r.Status == "Booked");
-                if (selectedReservation != null)
-                {
-                    _reservationRepo.DeleteReservation(selectedReservation.ReservationID);
-                    LoadReservations(); // Refresh the list after deletion
-                }
+                MessageBox.Show("Vælg en reservation at slette.");
+                return;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error canceling reservation: {ex.Message}");
-            }
+
+            _reservationRepo.DeleteReservation(SelectedReservation.ReservationID);
+            LoadReservations();
+            MessageBox.Show("Reservation slettet.");
         }
 
         // Method to save reservations to a CSV file
@@ -277,7 +280,10 @@ namespace SamstedHotel.ViewModel
                     r.Status
                 });
 
+                // Placering af filen (du kan evt. vise en filvælger dialog)
                 string filePath = "reservations.csv";
+
+                // Opret filens indhold
                 var sb = new StringBuilder();
                 sb.AppendLine("ReservationID,CustomerID,StartDate,EndDate,TotalAmount,Status");
 
@@ -286,12 +292,16 @@ namespace SamstedHotel.ViewModel
                     sb.AppendLine($"{reservation.ReservationID},{reservation.CustomerID},{reservation.StartDate:yyyy-MM-dd},{reservation.EndDate:yyyy-MM-dd},{reservation.TotalAmount},{reservation.Status}");
                 }
 
+                // Skriv filen
                 System.IO.File.WriteAllText(filePath, sb.ToString());
-                Console.WriteLine("Reservations successfully exported to CSV.");
+
+                // Vis en besked om succes
+                MessageBox.Show($"Reservationer blev gemt til filen:\n{filePath}", "Gem Succes", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving reservations to CSV: {ex.Message}");
+                // Vis en besked om fejl
+                MessageBox.Show($"Der opstod en fejl ved gemning af reservationer:\n{ex.Message}", "Gem Fejl", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
