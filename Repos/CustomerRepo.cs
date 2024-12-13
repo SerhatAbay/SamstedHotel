@@ -75,9 +75,9 @@ namespace SamstedHotel.Repos
                         };
                     }
                 }
+                return customer;
             }
-
-            return customer;
+      
         }
 
         // Tilføjer en ny kunde
@@ -106,7 +106,7 @@ namespace SamstedHotel.Repos
             {
                 SqlCommand command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CustomerID", entity.CustomerID);
-                command.Parameters.AddWithValue("@FirstName", entity.FirstName);
+                command.Parameters.AddWithValue("@FirstName", entity.FirstName);    
                 command.Parameters.AddWithValue("@LastName", entity.LastName);
                 command.Parameters.AddWithValue("@Email", entity.Email);
                 command.Parameters.AddWithValue("@TLF", entity.TLF);

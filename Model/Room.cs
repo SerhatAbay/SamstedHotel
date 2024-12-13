@@ -13,7 +13,7 @@ namespace SamstedHotel.Model
         public int RoomTypeID { get; set; }
         public string Status { get; set; } = "Available";
 
-        // Optional: Navigation property for RoomType
-        public RoomType? RoomType { get; set; }
+        // New property to hold the Room Type name
+        public string RoomTypeName { get; set; } = string.Empty;
     }
 }

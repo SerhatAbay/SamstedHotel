@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Windows;
 using System.Windows.Input;
 using SamstedHotel.Model;
 using SamstedHotel.Repos;
@@ -15,19 +16,38 @@ namespace SamstedHotel.ViewModel
         private readonly ReservationRepo _reservationRepo;
         private readonly CourseRoomRepo _courseRoomRepo;
         private readonly RoomRepo _roomRepo;
+        private readonly RoomTypeRepo _roomTypeRepo;
+        private readonly CustomerRepo _customerRepo;
 
-        private ObservableCollection<Reservation> _reservations; 
-      
+        private ObservableCollection<Reservation> _reservations;
         public ObservableCollection<Reservation> Reservations
         {
             get => _reservations;
             set
             {
-                _reservations = value;  // Set the value of _reservations
-                OnPropertyChanged();  // Notify the UI to refresh
+                _reservations = value;
+                OnPropertyChanged(nameof(Reservations));
             }
         }
 
+        // Ny property til at holde valgt kunde
+        private Customer _selectedCustomer;
+        public Customer SelectedCustomer
+        {
+            get => _selectedCustomer;
+            set { _selectedCustomer = value; OnPropertyChanged(); }
+        }
+
+        private ObservableCollection<Customer> _customers;
+        public ObservableCollection <Customer> Customers
+        {
+            get => _customers;
+            set
+            {
+                _customers = value;
+                OnPropertyChanged();
+            }
+        }
 
         private ObservableCollection<SelectableItem<Room>> _availableRooms;
         public ObservableCollection<SelectableItem<Room>> AvailableRooms
@@ -52,22 +72,25 @@ namespace SamstedHotel.ViewModel
             _connectionString = connectionString;
             _courseRoomRepo = new CourseRoomRepo(_connectionString);
             _roomRepo = new RoomRepo(_connectionString);
+            _roomTypeRepo = new RoomTypeRepo(_connectionString);
             _reservationRepo = new ReservationRepo(_connectionString);
-
+            _customerRepo = new CustomerRepo(_connectionString);
+           
+            _selectedCustomer = null; 
             _startDate = DateTime.Now;
             _endDate = DateTime.Now.AddDays(1);
-
             _reservations = new ObservableCollection<Reservation>();
 
+            LoadCustomers();
             LoadReservations();
             LoadRoomsAndCourseRooms();
 
             // Initialize commands
+            AddCustomerCommand = new RelayCommand(AddCustomer);
             BookReservationCommand = new RelayCommand(BookReservation);
             CancelReservationCommand = new RelayCommand(CancelReservation);
-            EditReservationCommand = new RelayCommand(EditReservation);
             SaveToCsvCommand = new RelayCommand(SaveReservationsToCsv);
-        }  
+        }
 
         // Properties for Start and End Date
         public DateTime StartDate
@@ -85,50 +108,63 @@ namespace SamstedHotel.ViewModel
         // Commands for different reservation actions
         public ICommand BookReservationCommand { get; }
         public ICommand CancelReservationCommand { get; }
-        public ICommand EditReservationCommand { get; }
         public ICommand SaveToCsvCommand { get; }
+        public ICommand AddCustomerCommand { get; }
 
         // Method to load reservations from the repository
         private void LoadReservations()
         {
-            // Hent alle reservationer fra databasen
-            var reservations = _reservationRepo.GetAllReservations(); // Sørg for, at denne metode returnerer en liste af Reservation-objekter
-
-            // Opdater ObservableCollection med de hentede data
+            var reservations = _reservationRepo.GetAllReservations();
             Reservations = new ObservableCollection<Reservation>(reservations);
         }
 
+        private void LoadCustomers()
+        {
+            var customers = _customerRepo.GetAll(); // Assuming GetAllCustomers method fetches all customers
+            Customers = new ObservableCollection<Customer>(customers);
+        }
 
+        // Load available rooms and course rooms based on the selected dates
         private void LoadRoomsAndCourseRooms()
         {
-            // Filtrer værelserne, så kun de tilgængelige i den valgte periode vises
+            // Fetch rooms and their associated room type name
             var rooms = _roomRepo.GetAll()
-                .Where(room => _roomRepo.IsRoomAvailable(room.RoomID, StartDate, EndDate))  // Tjek om værelset er ledigt i den valgte periode
-                .Select(room => new SelectableItem<Room>(room))  // Opret SelectableItem for binding
+                .Where(room => _roomRepo.IsRoomAvailable(room.RoomID, StartDate, EndDate))
+                .Select(room => new SelectableItem<Room>(new Room
+                {
+                    RoomID = room.RoomID,
+                    RoomName = room.RoomName,
+                    RoomTypeID = room.RoomTypeID,
+                    Status = room.Status,
+                    RoomTypeName = _roomRepo.GetRoomTypeName(room.RoomTypeID) // Fetch room type name using RoomTypeID
+                }))
                 .ToList();
 
-            // Filtrer kursuslokalerne, så kun de tilgængelige i den valgte periode vises
+            // Fetch course rooms (no modification needed, as it's already set up)
             var courseRooms = _courseRoomRepo.GetAll()
-                .Where(courseRoom => _courseRoomRepo.IsCourseRoomAvailable(courseRoom.CourseRoomID, StartDate, EndDate))  // Tjek om kursuslokalet er ledigt
-                .Select(courseRoom => new SelectableItem<CourseRoom>(courseRoom))  // Opret SelectableItem for binding
+                .Where(courseRoom => _courseRoomRepo.IsCourseRoomAvailable(courseRoom.CourseRoomID, StartDate, EndDate))
+                .Select(courseRoom => new SelectableItem<CourseRoom>(courseRoom))
                 .ToList();
 
-            // Opdater ObservableCollection for DataGrid binding
             AvailableRooms = new ObservableCollection<SelectableItem<Room>>(rooms);
             AvailableCourseRooms = new ObservableCollection<SelectableItem<CourseRoom>>(courseRooms);
         }
 
-        // Method to handle booking a reservation
-        private void BookReservation()
+        // New method to select a customer from the list
+        public void SelectCustomer(Customer customer)
+        {
+            SelectedCustomer = customer;
+        }
+
+        // Method to open the AddCustomerDialog and add a customer to the database
+        private void AddCustomer()
         {
             try
             {
-                // Åbn dialog for at tilføje en ny kunde
-                var addCustomerDialog = new AddCustomerDialog();
+                var addCustomerDialog = new AddCustomerDialog(_connectionString);
 
                 if (addCustomerDialog.ShowDialog() == true)
                 {
-                    // Opret ny kunde
                     var newCustomer = new Customer
                     {
                         FirstName = addCustomerDialog.FirstName,
@@ -137,84 +173,76 @@ namespace SamstedHotel.ViewModel
                         TLF = addCustomerDialog.TLF
                     };
 
-                    // Tilføj kunde til databasen via CustomerRepo
-                    var customerRepo = new CustomerRepo(_connectionString);
-                    customerRepo.Add(newCustomer);
+                    _customerRepo.Add(newCustomer);
+                    MessageBox.Show("Kunde er oprettet.", "Bekræftelse", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                    // Vælg de værelser og kursuslokaler, der er valgt af brugeren
-                    var selectedRooms = AvailableRooms.Where(r => r.IsSelected).Select(r => r.Item).ToList();
-                    var selectedCourseRooms = AvailableCourseRooms.Where(cr => cr.IsSelected).Select(cr => cr.Item).ToList();
-
-                    // Tjek om der er valgte værelser eller kursuslokaler
-                    if (!selectedRooms.Any() && !selectedCourseRooms.Any())
-                        throw new InvalidOperationException("Du skal vælge mindst ét værelse eller kursuslokale.");
-
-                    // Saml de valgte værelser og kursuslokaler i én kommasepareret liste
-                    var selectedRoomNames = selectedRooms.Select(room => room.RoomType.Name).ToList();
-                    var selectedCourseRoomNames = selectedCourseRooms.Select(cr => cr.CourseRoomName).ToList();
-                    var allSelectedItems = selectedRoomNames.Concat(selectedCourseRoomNames).ToList();
-                    string bookingType = string.Join(", ", allSelectedItems);  // Komma-separeret streng af valgte værelser og kursuslokaler
-
-                    // Beregn det samlede beløb
-                    decimal totalAmount = 0;
-
-                    // Beregn beløbet for værelser
-                    foreach (var room in selectedRooms)
-                    {
-                        if (room?.RoomType != null)  // Tjek om RoomType ikke er null
-                        {
-                            totalAmount += room.RoomType.PricePerNight * (EndDate - StartDate).Days;
-                        }
-                    }
-
-                    // Beregn beløbet for kursuslokaler
-                    foreach (var courseRoom in selectedCourseRooms)
-                    {
-                        if (courseRoom != null)
-                        {
-                            totalAmount += courseRoom.TotalPrice * (EndDate - StartDate).Days;
-                        }
-                    }
-
-                    if (totalAmount <= 0)
-                        throw new InvalidOperationException("Der er opstået en fejl i beregningen af beløbet.");
-
-                    // Opret reservationen
-                    var newReservation = new Reservation
-                    {
-                        CustomerID = newCustomer.CustomerID,  // Bruger CustomerID af den nye kunde
-                        StartDate = StartDate,
-                        EndDate = EndDate,
-                        TotalAmount = totalAmount, // Brug den beregnede totalAmount
-                        Status = "Booked",
-                        BookingType = bookingType // Gem de valgte værelser og kursuslokaler som BookingType
-                    };
-
-                    // Valider datoer
-                    if (StartDate >= EndDate)
-                        throw new InvalidOperationException("Startdato skal være før slutdato.");
-
-                    // Tilføj reservationen til databasen
-                    _reservationRepo.AddReservation(newReservation);
-
-                    // Opdater reservationslisten
-                    LoadReservations(); // Metode der henter reservationerne fra databasen
-
-                    // Bekræft booking
-                    Console.WriteLine("Reservation er gennemført.");
-                }
-                else
-                {
-                    // Hvis dialogen blev afbrudt (dvs. brugeren annullerede)
-                    Console.WriteLine("Booking blev afbrudt af brugeren.");
+                    // Reload the customers list to reflect the newly added customer
+                    LoadCustomers();  // Refresh the customers list
                 }
             }
             catch (Exception ex)
             {
-                // Vis fejlbesked
-                Console.WriteLine($"Fejl ved booking: {ex.Message}");
+                MessageBox.Show($"Der opstod en fejl under oprettelsen af kunde: {ex.Message}", "Fejl", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+
+        // Method to handle booking a reservation
+        public void BookReservation()
+        {
+            if (SelectedCustomer == null)
+            {
+                MessageBox.Show("Vælg en kunde først.");
+                return;
+            }
+
+            var selectedRooms = AvailableRooms.Where(r => r.IsSelected).Select(r => r.Item).ToList();
+            var selectedCourseRooms = AvailableCourseRooms.Where(cr => cr.IsSelected).Select(cr => cr.Item).ToList();
+
+            if (!selectedRooms.Any() && !selectedCourseRooms.Any())
+            {
+                MessageBox.Show("Vælg mindst et værelse eller kursuslokale.");
+                return;
+            }
+
+            decimal totalAmount = 0;
+            foreach (var room in selectedRooms)
+            {
+                // Now use _roomTypeRepo to get the room type price
+                decimal roomTypePrice = _roomTypeRepo.GetRoomTypePriceByName(room.RoomTypeName); // Correct repository usage
+
+                totalAmount += roomTypePrice * (EndDate - StartDate).Days;
+            }
+
+            foreach (var courseRoom in selectedCourseRooms)
+            {
+                totalAmount += courseRoom.TotalPrice * (EndDate - StartDate).Days;
+            }
+
+            if (totalAmount <= 0)
+            {
+                MessageBox.Show("Fejl i beregning af beløbet.");
+                return;
+            }
+
+            var reservation = new Reservation
+            {
+                CustomerID = SelectedCustomer.CustomerID,
+                StartDate = StartDate,
+                EndDate = EndDate,
+                TotalAmount = totalAmount,
+                Status = "Booked",
+                // Modify BookingType to use RoomTypeName (instead of RoomType.Name)
+                BookingType = string.Join(", ", selectedRooms.Select(r => r.RoomTypeName).Concat(selectedCourseRooms.Select(cr => cr.CourseRoomName)))
+            };
+
+            _reservationRepo.AddReservation(reservation);
+            MessageBox.Show("Reservation oprettet.");
+        }
+
+
+
+
 
         // Method to handle canceling a reservation
         private void CancelReservation()
@@ -230,35 +258,7 @@ namespace SamstedHotel.ViewModel
             }
             catch (Exception ex)
             {
-                // Handle exception (show error to user or log)
                 Console.WriteLine($"Error canceling reservation: {ex.Message}");
-            }
-        }
-
-        // Method to handle editing a reservation
-        private void EditReservation()
-        {
-            try
-            {
-                var selectedReservation = Reservations.FirstOrDefault(r => r.Status == "Booked");
-                if (selectedReservation != null)
-                {
-                    selectedReservation.StartDate = StartDate;
-                    selectedReservation.EndDate = EndDate;
-
-                    if (selectedReservation.StartDate >= selectedReservation.EndDate)
-                    {
-                        throw new InvalidOperationException("Start date must be before the end date.");
-                    }
-
-                    _reservationRepo.UpdateReservation(selectedReservation);
-                    LoadReservations(); // Refresh the list after update
-                }
-            }
-            catch (Exception ex)
-            {
-                // Handle exception (show error to user or log)
-                Console.WriteLine($"Error editing reservation: {ex.Message}");
             }
         }
 
@@ -291,7 +291,6 @@ namespace SamstedHotel.ViewModel
             }
             catch (Exception ex)
             {
-                // Handle exception (show error to user or log)
                 Console.WriteLine($"Error saving reservations to CSV: {ex.Message}");
             }
         }

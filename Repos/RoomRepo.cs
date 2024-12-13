@@ -48,6 +48,27 @@ namespace SamstedHotel.Repos
             return rooms;
         }
 
+        // New method to get room type name
+        public string GetRoomTypeName(int roomTypeID)
+        {
+            string roomTypeName = string.Empty;
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                string query = "SELECT Name FROM RoomType WHERE RoomTypeID = @RoomTypeID";
+
+                using (var command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@RoomTypeID", roomTypeID);
+
+                    roomTypeName = (string)command.ExecuteScalar();
+                }
+            }
+
+            return roomTypeName;
+        }
+
         // Henter et værelse baseret på ID
         public Room GetById(int roomId)
         {

@@ -1,4 +1,6 @@
 ﻿using System.Windows;
+using SamstedHotel.Model;
+using SamstedHotel.Repos;
 using SamstedHotel.ViewModel;
 
 namespace SamstedHotel.View
@@ -8,10 +10,16 @@ namespace SamstedHotel.View
         public ReservationView(string connectionString)
         {
             InitializeComponent();
-
             // Initialize the ViewModel and set it as the DataContext of the View
-            var viewModel = new ReservationViewModel(connectionString);
-            this.DataContext = viewModel;
+            this.DataContext = new ReservationViewModel(connectionString);
+        }
+
+        // Button click event handler for booking a reservation (optional)
+        // You don't need this if you bind the command directly in the XAML
+        private void BookReservationButton_Click(object sender, RoutedEventArgs e)
+        {
+            var viewModel = this.DataContext as ReservationViewModel;
+            viewModel?.BookReservation();  // Ensure it's not null before calling
         }
     }
 }

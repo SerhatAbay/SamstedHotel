@@ -18,24 +18,19 @@ namespace SamstedHotel.Repos
         // Opret en reservation
         public void AddReservation(Reservation reservation)
         {
-            // Hvis du ikke allerede har sat Updated, skal den opdateres til nuværende tidspunkt
-            reservation.Updated = DateTime.Now;
+            string query = "INSERT INTO Reservations (CustomerID, StartDate, EndDate, TotalAmount, Status, BookingType) VALUES (@CustomerID, @StartDate, @EndDate, @TotalAmount, @Status, @BookingType)";
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                connection.Open();
-                var command = new SqlCommand("INSERT INTO Reservations (CustomerID, Created, Updated, StartDate, EndDate, BookingType, TotalAmount, Status) VALUES (@CustomerID, @Created, @Updated, @StartDate, @EndDate, @BookingType, @TotalAmount, @Status)", connection);
-
-                // Tilføj parametre til SQL-kommandoen
+                SqlCommand command = new SqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CustomerID", reservation.CustomerID);
-                command.Parameters.AddWithValue("@Created", reservation.Created);
-                command.Parameters.AddWithValue("@Updated", reservation.Updated); // Sørger for at Updated bliver sat til nuværende dato
                 command.Parameters.AddWithValue("@StartDate", reservation.StartDate);
                 command.Parameters.AddWithValue("@EndDate", reservation.EndDate);
-                command.Parameters.AddWithValue("@BookingType", reservation.BookingType);
                 command.Parameters.AddWithValue("@TotalAmount", reservation.TotalAmount);
                 command.Parameters.AddWithValue("@Status", reservation.Status);
+                command.Parameters.AddWithValue("@BookingType", reservation.BookingType);
 
+                connection.Open();
                 command.ExecuteNonQuery();
             }
         }
@@ -57,8 +52,6 @@ namespace SamstedHotel.Repos
                         {
                             ReservationID = (int)reader["ReservationID"],
                             CustomerID = (int)reader["CustomerID"],
-                            Created = (DateTime)reader["Created"],
-                            Updated = (DateTime)reader["Updated"],
                             StartDate = (DateTime)reader["StartDate"],
                             EndDate = (DateTime)reader["EndDate"],
                             BookingType = (string)reader["BookingType"],
@@ -128,12 +121,11 @@ namespace SamstedHotel.Repos
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("UPDATE Reservations SET StartDate = @StartDate, EndDate = @EndDate, TotalAmount = @TotalAmount, Status = @Status, Updated = @Updated WHERE ReservationID = @ReservationID", connection);
+                var command = new SqlCommand("UPDATE Reservations SET StartDate = @StartDate, EndDate = @EndDate, TotalAmount = @TotalAmount, Status = @Status WHERE ReservationID = @ReservationID", connection);
                 command.Parameters.AddWithValue("@StartDate", reservation.StartDate);
                 command.Parameters.AddWithValue("@EndDate", reservation.EndDate);
                 command.Parameters.AddWithValue("@TotalAmount", reservation.TotalAmount);
                 command.Parameters.AddWithValue("@Status", reservation.Status);
-                command.Parameters.AddWithValue("@Updated", DateTime.Now);
                 command.Parameters.AddWithValue("@ReservationID", reservation.ReservationID);
 
                 command.ExecuteNonQuery();
@@ -172,8 +164,6 @@ namespace SamstedHotel.Repos
                         {
                             ReservationID = (int)reader["ReservationID"],
                             CustomerID = (int)reader["CustomerID"],
-                            Created = (DateTime)reader["Created"],
-                            Updated = (DateTime)reader["Updated"],
                             StartDate = (DateTime)reader["StartDate"],
                             EndDate = (DateTime)reader["EndDate"],
                             BookingType = (string)reader["BookingType"],

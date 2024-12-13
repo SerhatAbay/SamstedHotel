@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using SamstedHotel.Repos;
 
 namespace SamstedHotel.Repos
 {
@@ -119,5 +120,28 @@ namespace SamstedHotel.Repos
                 command.ExecuteNonQuery();
             }
         }
+
+        public decimal GetRoomTypePriceByName(string roomTypeName)
+        {
+            decimal price = 0m;
+            string query = "SELECT PricePerNight FROM RoomType WHERE Name = @Name";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.AddWithValue("@Name", roomTypeName);
+                connection.Open();
+
+                object result = command.ExecuteScalar(); // Use ExecuteScalar to get a single value (PricePerNight)
+
+                if (result != null && result != DBNull.Value)
+                {
+                    price = Convert.ToDecimal(result);
+                }
+            }
+
+            return price;
+        }
+
     }
 }
